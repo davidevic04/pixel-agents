@@ -18,6 +18,15 @@ export function useEditorKeyboard(
   useEffect(() => {
     if (!isEditMode) return;
     const handler = (e: KeyboardEvent) => {
+      // Typing in a text field (area rename, folder name) must not trigger editor
+      // shortcuts: 't' toggles, Backspace deletes and Esc closes the editor.
+      const target = e.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      ) {
+        return;
+      }
       if (e.key === 'Escape') {
         // Multi-stage Esc: deselect item → close tool → deselect placed → close editor
         if (editorState.activeTool === EditTool.FURNITURE_PICK) {

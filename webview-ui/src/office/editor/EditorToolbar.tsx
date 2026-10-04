@@ -775,6 +775,7 @@ function AreaCard({
   const [renaming, setRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState(area.label);
   const [addFolderOpen, setAddFolderOpen] = useState(false);
+  const [folderDraft, setFolderDraft] = useState('');
 
   const mappedFolders = useMemo(
     () =>
@@ -787,6 +788,15 @@ function AreaCard({
     () => workspaceFolders.filter((f) => !mappedFolders.includes(f.name)),
     [workspaceFolders, mappedFolders],
   );
+
+  // Map a folder by typed name. Needed in standalone, where no folder is known until
+  // an agent has run in it (the dropdown below only lists folders already seen).
+  const commitFolderDraft = () => {
+    const name = folderDraft.trim();
+    if (!name || mappedFolders.includes(name)) return;
+    onAreaMappingChange(name, area.label, 'add');
+    setFolderDraft('');
+  };
 
   const commitRename = () => {
     setRenaming(false);
@@ -894,7 +904,11 @@ function AreaCard({
             if (availableFolders.length === 0) return;
             setAddFolderOpen((v) => !v);
           }}
-          title={availableFolders.length === 0 ? 'All folders already mapped' : 'Map a folder…'}
+          title={
+            availableFolders.length === 0
+              ? 'No known folders to pick yet. Type a folder name below.'
+              : 'Map a folder…'
+          }
         >
           Add folder…
         </Button>
@@ -911,6 +925,32 @@ function AreaCard({
             </DropdownItem>
           ))}
         </Dropdown>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <input
+          type="text"
+          value={folderDraft}
+          placeholder="Folder name…"
+          onChange={(e) => setFolderDraft(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commitFolderDraft();
+          }}
+          className="flex-1 min-w-0 text-xs py-2 px-4 bg-bg border-2 border-border rounded-none text-text"
+          title="Type the name of a folder (e.g. pixel-agents) and press Enter"
+        />
+        <Button
+          variant="default"
+          size="sm"
+          onClick={(e) => {
+            e?.stopPropagation();
+            commitFolderDraft();
+          }}
+          title="Map the typed folder name"
+        >
+          Add
+        </Button>
       </div>
     </div>
   );
